@@ -1,0 +1,123 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Catch the Falling Stars</title>
+  <style>
+    body {
+      margin: 0;
+      overflow: hidden;
+      background: linear-gradient(#001, #223);
+      color: white;
+      font-family: Arial, sans-serif;
+      text-align: center;
+    }
+    canvas {
+      display: block;
+      margin: auto;
+      background: #111;
+      border: 2px solid white;
+    }
+    #score {
+      position: absolute;
+      top: 10px;
+      left: 10px;
+      font-size: 20px;
+    }
+    #gameOver {
+      position: absolute;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%);
+      font-size: 28px;
+      display: none;
+    }
+  </style>
+</head>
+<body>
+  <div id="score">Score: 0 | Missed: 0</div>
+  <canvas id="gameCanvas" width="400" height="600"></canvas>
+  <div id="gameOver">Game Over!<br><button onclick="restart()">Restart</button></div>
+
+  <script>
+    const canvas = document.getElementById("gameCanvas");
+    const ctx = canvas.getContext("2d");
+
+    let basket = { x: 160, y: 550, w: 80, h: 20, speed: 7 };
+    let stars = [];
+    let score = 0;
+    let missed = 0;
+    let gameRunning = true;
+
+    function createStar() {
+      stars.push({ x: Math.random() * 380, y: 0, r: 10 });
+    }
+
+    function drawBasket() {
+      ctx.fillStyle = "yellow";
+      ctx.fillRect(basket.x, basket.y, basket.w, basket.h);
+    }
+
+    function drawStars() {
+      ctx.fillStyle = "white";
+      stars.forEach(star => {
+        ctx.beginPath();
+        ctx.arc(star.x, star.y, star.r, 0, Math.PI * 2);
+        ctx.fill();
+      });
+    }
+
+    function updateStars() {
+      stars.forEach((star, i) => {
+        star.y += 3;
+        if (
+          star.y > basket.y &&
+          star.x > basket.x &&
+          star.x < basket.x + basket.w
+        ) {
+          stars.splice(i, 1);
+          score++;
+        } else if (star.y > canvas.height) {
+          stars.splice(i, 1);
+          missed++;
+          if (missed >= 3) {
+            gameRunning = false;
+            document.getElementById("gameOver").style.display = "block";
+          }
+        }
+      });
+    }
+
+    function gameLoop() {
+      if (!gameRunning) return;
+      ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+      drawBasket();
+      drawStars();
+      updateStars();
+
+      document.getElementById("score").textContent = `Score: ${score} | Missed: ${missed}`;
+
+      requestAnimationFrame(gameLoop);
+    }
+
+    document.addEventListener("keydown", e => {
+      if (e.key === "ArrowLeft" && basket.x > 0) basket.x -= basket.speed;
+      if (e.key === "ArrowRight" && basket.x < canvas.width - basket.w) basket.x += basket.speed;
+    });
+
+    setInterval(createStar, 1000);
+    gameLoop();
+
+    function restart() {
+      score = 0;
+      missed = 0;
+      stars = [];
+      gameRunning = true;
+      document.getElementById("gameOver").style.display = "none";
+      gameLoop();
+    }
+  </script>
+</body>
+</html>
